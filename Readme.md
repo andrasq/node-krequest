@@ -16,6 +16,8 @@ of each; specifically
   jsonClient syntax for that.
 - request bodies are json-encoded if not already a string or Buffer, like jsonClient
 - if not specified, request content-type is auto-detected as `text/plain`, `application/octet-stream` or `application/json`
+- callback is optional, like request
+- body and options are optional
 - only the `post`, `get`, `put` etc convenience methods are wrappered; `request()` is unchanged
 
 The jsonClient support is in the form of a `createJsonClient` method that returns
@@ -35,20 +37,22 @@ speed to half the other http wrappers.
 
 The web request methods (get, post, put, etc) call signatures have recognized forms of
 
-        post(uri, callback)
-        post(uri, body, callback)
-        post(uri, body, options, callback)
+        post(uri, [callback])
+        post(uri, body, [callback])
+        post(uri, body, options, [callback])
 
 - uri - fully qualified url, relative path, or request options object
 - body - string, Buffer, or object to be json-encoded
 - options - request options to be merged with uri
 - callback - function taking `(err, res, body)` Error object if any, http response,
-  and a Buffer containing the entire response
+  and a Buffer containing the entire response.  If no callback is specified, the
+  call returns an event emitter that delivers the response with on('data') events.
 
 
-### krequest.call( method, url, body, [options,] callback(err, res, returnedBody) )
+### krequest.call( method, url, body, options, callback(err, res, returnedBody) )
 
 A unified entry point to the web request methods `get`, `post`, `del`, etc.
+The parameters following the method can be in any of the formats shown above.
 
 
 ### krequest.createJsonClient( options )
