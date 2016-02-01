@@ -4,6 +4,7 @@ var assert = require('assert');
 var net = require('net');
 var http = require('http');
 var url = require('url');
+var events = require('events');
 var krequest = require('./');
 
 describe ('krequest', function() {
@@ -11,9 +12,9 @@ describe ('krequest', function() {
     var unique = Math.floor(Math.random() * 0x100000000).toString(16);
     var baseUrl = "http://localhost:1337";
     var serverChunk;
+    var responseMessage;
 
     before ('setUp', function(done) {
-        var responseMessage = unique;
         server = net.createServer().listen(1337);
         server.on('connection', function(socket) {
             socket.setNoDelay();
@@ -22,11 +23,11 @@ describe ('krequest', function() {
                 if (chunk.toString().indexOf(' /jsonError HTTP') > 0) {
                     socket.write(
                         "HTTP/1.1 404 NOT FOUND\r\n" +
-                        "Content-Type: " + "application/json" + "\r\n" +
                         "Content-Length: " + responseMessage.length + "\r\n" +
                         "\r\n" +
                         responseMessage
                     );
+                    socket.end();
                 }
                 else {
                     socket.write(
@@ -36,8 +37,8 @@ describe ('krequest', function() {
                         "\r\n" +
                         responseMessage
                     );
+                    socket.end();
                 }
-                socket.end();
             })
         })
         done();
@@ -49,6 +50,8 @@ describe ('krequest', function() {
     });
 
     beforeEach (function(done) {
+        unique = Math.floor(Math.random() * 0x100000000).toString(16);
+        responseMessage = unique;
         serverChunk = null;
         done();
     })
@@ -115,6 +118,45 @@ describe ('krequest', function() {
             if (err) return done(err);
             assert.ok(serverChunk.toString().indexOf(expect) > 0);
             assert.equal(serverChunk.toString().indexOf(expect), serverChunk.toString().length - expect.length);
+            done();
+        })
+    })
+
+    it ('makes request to absolute url', function(done) {
+        var client = krequest.defaults({ url: "http://google.com" });
+        client.post(baseUrl, function(err, res, body) {
+            assert.ok(body.toString().indexOf(unique) >= 0);
+            done();
+        })
+    })
+
+    it ('makes request to relative url', function(done) {
+        var client = krequest.defaults({ url: baseUrl });
+        client.post("/path", function(err, res, body) {
+            assert.ok(body.toString().indexOf(unique) >= 0);
+            done();
+        })
+    })
+
+    it ('returns an EventEmitter that delivers the response like request', function(done) {
+        var res = krequest.post(baseUrl);
+        assert.ok(res instanceof events.EventEmitter);
+        var chunks = [];
+        res.on('data', function(chunk) {
+            chunks.push(chunk);
+        })
+        res.on('end', function() {
+            assert.ok(Buffer.concat(chunks).toString().indexOf(unique) >= 0);
+            done();
+        })
+        res.on('error', function(err) {
+            done(err);
+        })
+    })
+
+    it ('acts on request options', function(done) {
+        krequest.post(baseUrl + "/path", "body", { gzip: true }, function(err, res, body) {
+            assert.ok(serverChunk.toString().indexOf('accept-encoding: gzip') > 0);
             done();
         })
     })
