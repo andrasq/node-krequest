@@ -1,27 +1,49 @@
 krequest
 ========
 
-Decorates [`request`](https://npmjs.org/package/requeste) with an improved api
-with features borrowed from `jsonClient` and `qhttp`.
+This is a wrapper around [`request`](https://npmjs.org/package/requeste) to make the
+api more convenient to use (give it a nicer "hand-feel") and to ease transition away
+from `restify.createJsonClient`.
 
-The changed api allows the body to be passed as a call parameter, and a more
-consistent use of relative paths.
+The modified api is a blend of request and jsonClient; specifically
 
-The web request methods (get, post, put, etc) have recognized forms of
+- only the `post`, `get`, `put` etc convenience methods are wrappered; `request()` is unchanged
+- web requests can specify the body directly as a call parameter like jsonClient
+- calls return the un-parsed binary response body like `request`
+- both absolute and relative urls work without surprises, like jsonClient
+- a `url` specified as a `defaults()` option is a baseUrl, like jsonClient.  Note that request
+  prevents a baseUrl from being overridden by another fully qualified url; use the `url`
+  jsonClient syntax for that.
+- request bodies are json-encoded if not already a string or Buffer, like jsonClient
+- if not specified, request content-type is auto-detected as `text/plain`, `application/octet-stream` or `application/json`
+
+The jsonClient support is in the form of a `createJsonClient` method that returns
+a request object with jsonClient-like call and response semantics, namely
+
+- web request bodies are auto-encoded before being sent
+- response bodies are audo-decoded into objects
+- the callback gets `(err, req, res, obj)` with req.headers populated
+
+
+### krequest.post, get, put
+
+The web request methods (get, post, put, etc) call signatures have recognized forms of
 
         post(uri, callback)
         post(uri, body, callback)
         post(uri, body, options, callback)
 
+- uri - fully qualified url, relative path, or request options object
+- body - string, Buffer, or object to be json-encoded
+- options - request options to be merged with uri
+- callback - function taking `(err, res, body)` Error object if any, http response,
+  and a Buffer containing the entire response
 
-Added Functions
----------------
 
-### krequest.call( method, url, body, callback(err, res, returnedBody) )
+### krequest.call( method, url, body, [options,] callback(err, res, returnedBody) )
 
-A unified entry point to the web request methods `get`, `post`, `del`, etc., using
-the 3-argument form above.  Url may be a fully qualified uri string, a relative uri
-path, or an options object.
+A unified entry point to the web request methods `get`, `post`, `del`, etc.
+
 
 ### krequest.createJsonClient( options )
 
@@ -33,9 +55,3 @@ Convenience wrapper for porting unit tests written for `restify` to use `request
 Options:
 
 - `url` - fully qualified base url to prepend to /-relative request paths
-
-
-Todo
-----
-
-* should support the qhttp option `returnBody: false` to return immediately and not gather the response body
