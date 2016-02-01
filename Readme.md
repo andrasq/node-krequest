@@ -24,11 +24,12 @@ The jsonClient support is in the form of a `createJsonClient` method that return
 a request object with jsonClient-like call and response semantics, namely
 
 - web request bodies are auto-encoded before being sent
+- if not specified, request content-type is auto-detected as `application/json` (strings or objects) or `application/bson` (Buffers)
 - response bodies are audo-decoded into objects
 - the callback gets `(err, req, res, obj)` with req.headers populated
 
-Some of the other drawbacks of `request` are harder be work around; among these are
-that it doesn't follow the "do one thing and do it well" principle, and even simple
+Some of the drawbacks of `request` are harder be work around; among these are that
+it doesn't follow the "do one thing and do it well" principle, and even simple
 use-cases end up paying for the overhead of all the unused features, cutting call
 speed to half the other http wrappers.
 
