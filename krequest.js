@@ -6,6 +6,7 @@
 
 var request = require('request');
 var krequest = request.defaults({});
+var http = require('http');
 
 krequest = fixupApi(krequest);
 krequest.createJsonClient = createJsonClient;
@@ -142,7 +143,7 @@ function createJsonClient( userOpts ) {
             break;
         }
         if (!err && res.statusCode >= 400) {
-            err = new Error();
+            err = new Error(http.STATUS_CODES[res.statusCode] || "http error");
             err.statusCode = res.statusCode;
             err.body = obj;
         }

@@ -67,6 +67,16 @@ Options:
 
 - `url` - fully qualified base url to prepend to /-relative request paths
 
+`jsonClient.post` etc. requests are similar to `request.post` etc, with some
+encoding and response differences mentioned above
+
+#### jsonClient.post(uri, body, callback(err, req, res, obj))
+
+Makes a POST request to the uri (fully qulified url string, relative path, or
+request object) with body.  The callback is invoked with any error, the http
+request, the http response, and the decoded response body.  Note that jsonClient
+decodes http errors into the error object, setting fields `statusCode` and `body`.
+
 
 Related work
 ------------
