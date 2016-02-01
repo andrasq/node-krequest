@@ -39,22 +39,32 @@ function fixupApi( client ) {
     }
 
     client.call = function(method, url, body, options, callback) {
-        return client[method.toLowerCase()](url, body, options, callback);
+        method = method.toLowerCase();
+        switch (arguments.length) {
+        case 1: return client[method]();
+        case 2: return client[method](url);
+        case 3: return client[method](url, body);
+        case 4: return client[method](url, body, options);
+        default:
+        case 5: return client[method](url, body, options, callback);
+        }
     };
 
     function fixMethodApi(name) {
         return function( url, body, options, callback ) {
-            if (!callback) { callback = options; options = null; }
-            if (!callback) { callback = body; body = null; }
-            if (!callback) { callback = url; url = null; }
+            if (!callback && typeof arguments[arguments.length - 1] === 'function') { 
+                if (!callback) { callback = options; options = null; }
+                if (!callback) { callback = body; body = null; }
+                if (!callback) { callback = url; url = null; }
+            }
             try {
-                var typeMap = { text: 'text/plain', binary: 'application/octet-stream', default: 'application/json' };
+                var typeMap = { text: 'text/plain', binary: 'application/octet-stream', empty: 'text/plain', other: 'application/json' };
                 var uri = buildUri(client, url, options, body, typeMap);
                 return _requestMethods[name].call(client, uri, function(err, res, body) {
                     // TODO: see if the request object can be returned to the callback
                     if (err) callback(err);
                     res.body = body;
-                    callback(err, res, body);
+                    if (callback) callback(err, res, body);
                 });
             }
             catch (err) {
