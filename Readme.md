@@ -1,11 +1,12 @@
 krequest
 ========
 
-This is a wrapper around [`request`](https://npmjs.org/package/requeste) to make the
+This is a wrapper around [`request`](https://npmjs.org/package/request) to make the
 api more convenient to use (give it a nicer "hand-feel") and to ease transition away
 from `restify.createJsonClient`.
 
-The modified api is a blend of request and jsonClient; specifically
+The modified api is a blend of request and jsonClient, combining the good features
+of each; specifically
 
 - only the `post`, `get`, `put` etc convenience methods are wrappered; `request()` is unchanged
 - web requests can specify the body directly as a call parameter like jsonClient
@@ -23,6 +24,11 @@ a request object with jsonClient-like call and response semantics, namely
 - web request bodies are auto-encoded before being sent
 - response bodies are audo-decoded into objects
 - the callback gets `(err, req, res, obj)` with req.headers populated
+
+Some of the other drawbacks of `request` are harder be work around; among these are
+that it doesn't follow the "do one thing and do it well" principle, and even simple
+use-cases end up paying for the overhead of all the unused features, cutting call
+speed to half the other http wrappers.
 
 
 ### krequest.post, get, put
@@ -55,3 +61,11 @@ Convenience wrapper for porting unit tests written for `restify` to use `request
 Options:
 
 - `url` - fully qualified base url to prepend to /-relative request paths
+
+
+Related work
+------------
+
+- [`request`](https://npmjs.org/package/request) - full-featured slow http client
+- [`qhttp`](https://npmjs.org/package/qhttp) - lean, fast http client
+- [`restify`](https://npmjs.org/package/restify) - framework with built-in http client
