@@ -9,7 +9,7 @@ The modified api is a blend of request and jsonClient, combining the good featur
 of each; specifically
 
 - web requests can specify the body directly as a call parameter like jsonClient
-- calls return the un-decoded binary response by default, unlike `request`
+- calls return the un-decoded binary response by default, unlike `request` (same as `encoding: null`)
 - both absolute and relative urls work without surprises, like jsonClient
 - a `url` specified as a `defaults()` option is a baseUrl, like jsonClient.  Note that request
   prevents a baseUrl from being overridden by another fully qualified url; use the `url`
