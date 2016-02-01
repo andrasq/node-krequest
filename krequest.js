@@ -61,6 +61,8 @@ function fixupApi( client ) {
             try {
                 var typeMap = { text: 'text/plain', binary: 'application/octet-stream', empty: 'text/plain', other: 'application/json' };
                 var uri = buildUri(client, url, options, body, typeMap);
+                // return untranslated responses by default
+                if (uri.encoding === undefined) uri.encoding = null;
                 return _requestMethods[name].call(client, uri, function(err, res, body) {
                     if (err) callback(err);
                     res.body = body;
@@ -169,8 +171,8 @@ function buildUri( req, url, options, body, typeMap ) {
     uri.headers = copyFields({}, req._kreq.options.headers, url && url.headers, options && options.headers);
 
     // combine the many ways of specifying the destination into a single fully qualified url
-    var path = uri.url || uri.uri || uri.path || uri.baseUrl;
-    if (path[0] === '/') {
+    var path = uri.url || uri.uri || uri.path || uri.baseUrl || req._kreq.baseUrl;
+    if (path && path[0] === '/') {
         // fill out /-relative paths
         var baseUrl =
             uri.baseUrl ? uri.baseUrl :
@@ -183,7 +185,7 @@ function buildUri( req, url, options, body, typeMap ) {
     delete uri.url;
     delete uri.uri;
     delete uri.path;
-    uri.url = path || uri.baseUrl;
+    uri.url = path;
     delete uri.baseUrl;
 
     // body is optional, auto-detect encoding.

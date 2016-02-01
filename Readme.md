@@ -74,9 +74,10 @@ encoding and response differences mentioned above
 
 Makes a POST request to the uri (fully qulified url string, relative path, or
 request object) with body.  The callback is invoked with any error, the http
-request, the http response, and the decoded response body.  Note that jsonClient
-decodes http errors into the error object, setting fields `statusCode` and `body`.
-
+request, the http response, and the decoded response object.  Note that jsonClient
+hoists http errors into the error object, setting fields `statusCode` (http status
+code) and `body` (decoded response).  `obj` is the decoded response, `res.body` is
+the response as received.
 
 Related work
 ------------

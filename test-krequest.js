@@ -154,6 +154,22 @@ describe ('krequest', function() {
         })
     })
 
+    it ('returns Buffer by default', function(done) {
+        var client = krequest.defaults({ });
+        client.post(baseUrl, {}, {}, function(err, res, body) {
+            assert(Buffer.isBuffer(body));
+            done();
+        })
+    })
+
+    it ('returns string if encoding is specified', function(done) {
+        var client = krequest.defaults({ });
+        client.post(baseUrl, {}, {encoding: 'utf8'}, function(err, res, body) {
+            assert(typeof body === 'string');
+            done();
+        })
+    })
+
     it ('acts on request options', function(done) {
         krequest.post(baseUrl + "/path", "body", { gzip: true }, function(err, res, body) {
             assert.ok(serverChunk.toString().indexOf('accept-encoding: gzip') > 0);
