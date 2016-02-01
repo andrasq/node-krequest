@@ -8,7 +8,6 @@ from `restify.createJsonClient`.
 The modified api is a blend of request and jsonClient, combining the good features
 of each; specifically
 
-- only the `post`, `get`, `put` etc convenience methods are wrappered; `request()` is unchanged
 - web requests can specify the body directly as a call parameter like jsonClient
 - calls return the un-parsed binary response body like `request`
 - both absolute and relative urls work without surprises, like jsonClient
@@ -17,6 +16,7 @@ of each; specifically
   jsonClient syntax for that.
 - request bodies are json-encoded if not already a string or Buffer, like jsonClient
 - if not specified, request content-type is auto-detected as `text/plain`, `application/octet-stream` or `application/json`
+- only the `post`, `get`, `put` etc convenience methods are wrappered; `request()` is unchanged
 
 The jsonClient support is in the form of a `createJsonClient` method that returns
 a request object with jsonClient-like call and response semantics, namely

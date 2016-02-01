@@ -1,7 +1,7 @@
 {
   "name": "krequest",
   "version": "0.1.0",
-  "description": "Kinvey Request",
+  "description": "wrappered request with improved api",
   "main": "krequest.js",
   "engines": {
     "node": ">=0.8"
