@@ -60,7 +60,7 @@ function fixupApi( client ) {
             }
             try {
                 var typeMap = { text: 'text/plain', binary: 'application/octet-stream', empty: 'text/plain', other: 'application/json' };
-                var uri = buildUri(client, url, options, body, typeMap);
+                var uri = buildUri(client, url, body, options, typeMap);
                 // return untranslated responses by default
                 if (uri.encoding === undefined) uri.encoding = null;
                 return _requestMethods[name].call(client, uri, function(err, res, body) {
@@ -114,7 +114,7 @@ function createJsonClient( userOpts ) {
             if (!callback) { callback = url; url = null; }
             try {
                 var typeMap = { text: 'application/json', binary: 'application/bson', empty: 'application/json', other: 'application/json' };
-                var uri = buildUri(client, url, null, body, typeMap);
+                var uri = buildUri(client, url, body, null, typeMap);
                 return _requestMethods[name].call(client, uri, function(err, res, body) {
                     returnJsonClientResponse(err, res.req, res, body, callback);
                 });
@@ -165,7 +165,7 @@ function copyFields( to, from /* VARARGS */ ) {
     return to;
 }
 
-function buildUri( req, url, options, body, typeMap ) {
+function buildUri( req, url, body, options, typeMap ) {
     // merge defaults with just-specified options
     var uri = copyFields({}, req._kreq.options, typeof url === 'object' ? url : {url: url}, options);
     uri.headers = copyFields({}, req._kreq.options.headers, url && url.headers, options && options.headers);
@@ -185,7 +185,7 @@ function buildUri( req, url, options, body, typeMap ) {
     delete uri.url;
     delete uri.uri;
     delete uri.path;
-    uri.url = path;
+    uri.uri = path;     // request: "options.uri is a required argument"
     delete uri.baseUrl;
 
     // body is optional, auto-detect encoding.
