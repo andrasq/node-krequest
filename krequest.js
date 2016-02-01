@@ -111,7 +111,7 @@ function createJsonClient( userOpts ) {
             if (!callback) { callback = body; body = null; }
             if (!callback) { callback = url; url = null; }
             try {
-                var typeMap = { text: 'application/json', binary: 'application/bson', default: 'application/json' };
+                var typeMap = { text: 'application/json', binary: 'application/bson', empty: 'application/json', other: 'application/json' };
                 var uri = buildUri(client, url, null, body, typeMap);
                 return _requestMethods[name].call(client, uri, function(err, res, body) {
                     // TODO: see if the request object can be returned to the callback
@@ -125,13 +125,11 @@ function createJsonClient( userOpts ) {
         }
     }
 
-    // emulate restify.createJsonClient responses
     function returnJsonClientResponse( err, req, res, body, cb ) {
         if (err || !res) return cb(err, req, res, null);
 
+        // decode the response body into an object
         var obj;
-        res.body = body;
-
         switch (res.headers['content-type']) {
         case 'application/bson':
         case 'application/octet-stream':
@@ -139,8 +137,7 @@ function createJsonClient( userOpts ) {
             break;
         case 'application/json':
         case undefined:
-            if (body) try { obj = JSON.parse(body) } catch (err) { obj = {} }
-            else body = body;
+            if (body) try { obj = JSON.parse(body.toString()) } catch (err) { obj = {} }
             break;
         case 'text/plain':
         default:
@@ -148,11 +145,12 @@ function createJsonClient( userOpts ) {
             break;
         }
         if (!err && res.statusCode >= 400) {
-            // superficial jsonClient error return emulation
             err = new Error();
             err.statusCode = res.statusCode;
             err.body = obj;
         }
+
+        res.body = body;
         return cb(err, req, res, obj);
     }
 
@@ -172,9 +170,10 @@ function buildUri( req, url, options, body, typeMap ) {
     var uri = copyFields({}, req._kreq.options, typeof url === 'object' ? url : {url: url}, options);
     uri.headers = copyFields({}, req._kreq.options.headers, url && url.headers, options && options.headers);
 
-    // fill out /-relative paths
+    // combine the many ways of specifying the destination into a single fully qualified url
     var path = uri.url || uri.uri || uri.path || uri.baseUrl;
     if (path[0] === '/') {
+        // fill out /-relative paths
         var baseUrl =
             uri.baseUrl ? uri.baseUrl :
             req._kreq.baseUrl ? req._kreq.baseUrl :
@@ -185,27 +184,21 @@ function buildUri( req, url, options, body, typeMap ) {
     }
     delete uri.url;
     delete uri.uri;
-    delete uri.baseUrl;
+    delete uri.path;
     uri.url = path || uri.baseUrl;
+    delete uri.baseUrl;
 
-    // body is optional, auto-detect encoding.  Body must not be null or undefined.
-    // uri.body must already be stringified, it is not re-encoded.
-    if (body != null) uri.body = encodeBody(uri.headers, body, typeMap);
+    // body is optional, auto-detect encoding.
+    // If body is passed in uri.body, it must already be stringified.
+    typeMap = typeMap || { text: 'text/plain', binary: 'application/bson', empty: 'application/json', other: 'application/json' };
+    if (body != null || uri.body == null) uri.body = encodeBody(uri.headers, body, typeMap);
 
-    typeMap = typeMap || {
-        text: 'text/plain',
-        binary: 'application/bson',
-        default: 'application/json',
-    };
-
-    // body encoder borrowed from qhttp:
     function encodeBody( headers, body, typeMap ) {
         var type;
         if (typeof body === 'string')   { type = typeMap.text; }
-        else if (Buffer.isBuffer(body)) { type = typeMap.binary; }          // restify expects app/bson
-        // TODO: how to pass an empty body?  empty string or perhaps an empty object?
-        else if (body == null)          { type = typeMap.default; body = ""; }
-        else                            { type = typeMap.default; body = JSON.stringify(body); }
+        else if (Buffer.isBuffer(body)) { type = typeMap.binary; }
+        else if (body == null)          { type = typeMap.empty; body = ""; }
+        else                            { type = typeMap.other; body = JSON.stringify(body); }
         if (!headers['Content-Type'] && !headers['content-type']) headers['Content-Type'] = type;
         return body;
     }
