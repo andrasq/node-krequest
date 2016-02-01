@@ -66,6 +66,7 @@ Convenience wrapper for porting unit tests written for `restify` to use `request
 Options:
 
 - `url` - fully qualified base url to prepend to /-relative request paths
+- other options as for `request.defaults()`
 
 `jsonClient.post` etc. requests are similar to `request.post` etc, with some
 encoding and response differences mentioned above
