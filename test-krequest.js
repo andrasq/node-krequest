@@ -180,11 +180,13 @@ describe ('krequest', function() {
             })
         })
 
-        it ('post returns 4 params', function(done) {
-            client.post("/path", unique, function(err, req, res, obj) {
-                if (err) return done(err);
+        it ('post returns err/req/res/obj params', function(done) {
+            client.post("/jsonError", {body: unique}, function(err, req, res, obj) {
                 assert.ok(serverChunk.toString().indexOf(unique) > 0);
+                assert.ok(err instanceof Error);
                 assert.ok(req);
+                assert.ok(req instanceof http.ClientRequest);
+                assert.ok(res instanceof http.IncomingMessage);
                 assert.ok(res.body.toString().indexOf(unique) >= 0);
                 assert.ok(obj);
                 done();

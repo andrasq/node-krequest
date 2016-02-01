@@ -61,7 +61,6 @@ function fixupApi( client ) {
                 var typeMap = { text: 'text/plain', binary: 'application/octet-stream', empty: 'text/plain', other: 'application/json' };
                 var uri = buildUri(client, url, options, body, typeMap);
                 return _requestMethods[name].call(client, uri, function(err, res, body) {
-                    // TODO: see if the request object can be returned to the callback
                     if (err) callback(err);
                     res.body = body;
                     if (callback) callback(err, res, body);
@@ -114,9 +113,7 @@ function createJsonClient( userOpts ) {
                 var typeMap = { text: 'application/json', binary: 'application/bson', empty: 'application/json', other: 'application/json' };
                 var uri = buildUri(client, url, null, body, typeMap);
                 return _requestMethods[name].call(client, uri, function(err, res, body) {
-                    // TODO: see if the request object can be returned to the callback
-                    var req = { options: uri, headers: uri.headers, body: uri.body };
-                    returnJsonClientResponse(err, req, res, body, callback);
+                    returnJsonClientResponse(err, res.req, res, body, callback);
                 });
             }
             catch (err) {
