@@ -19,7 +19,7 @@ function fixupApi( client ) {
     var _defaults = client.defaults;
     client.defaults = function( options ) {
         options = options || {};
-        var req = _defaults.call(client, options);
+        var req = request.defaults(options);
         req = fixupApi(req);
         var _kreq = { baseUrl: '', options: { headers: {} } };
         _kreq.baseUrl = options.baseUrl || options.url || '';
@@ -137,7 +137,7 @@ function createJsonClient( userOpts ) {
             break;
         case 'application/json':
         case undefined:
-            if (body) try { obj = JSON.parse(body.toString()) } catch (err) { obj = {} }
+            try { obj = JSON.parse(body.toString()) } catch (err) { obj = {} }
             break;
         case 'text/plain':
         default:

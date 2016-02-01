@@ -171,8 +171,9 @@ describe ('krequest', function() {
     })
 
     it ('acts on request options', function(done) {
-        krequest.post(baseUrl + "/path", "body", { gzip: true }, function(err, res, body) {
-            assert.ok(serverChunk.toString().indexOf('accept-encoding: gzip') > 0);
+        krequest.post(baseUrl + "/path", "body", { auth: { user: unique, pass: unique } }, function(err, res, body) {
+            var auth = new Buffer(unique + ':' + unique).toString('base64');
+            assert.ok(serverChunk.toString().indexOf('authorization: Basic ' + auth) > 0);
             done();
         })
     })
