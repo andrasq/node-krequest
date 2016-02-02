@@ -192,7 +192,8 @@ function buildUri( req, url, body, options, typeMap ) {
         var baseUrl =
             uri.baseUrl ? uri.baseUrl :
             req._kreq.baseUrl ? req._kreq.baseUrl :
-            (uri.host) ? (uri.protocol || 'http:') + '//' + uri.host :
+            // TODO: what is the precedence of duplicated fields host/hostname/port?
+            (uri.host) ? (uri.protocol || 'http:') + '//' + uri.host + (uri.port && uri.host.indexOf(':') < 0 ? ':'+uri.port : ''):
             (uri.hostname) ? (uri.protocol || 'http:') + '//' + uri.hostname + (uri.port ? ':'+uri.port : '') :
             null;
         if (baseUrl) path = baseUrl + path;

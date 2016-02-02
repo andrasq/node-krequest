@@ -1,6 +1,6 @@
 {
   "name": "krequest",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "wrappered request with improved api",
   "main": "krequest.js",
   "readmeFilename": "Readme.md",
