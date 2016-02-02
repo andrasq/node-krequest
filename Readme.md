@@ -15,6 +15,7 @@ of each; specifically
   prevents a baseUrl from being overridden by another fully qualified url; use the `url`
   jsonClient syntax for that.
 - request bodies are json-encoded if not already a string or Buffer, like jsonClient
+- fixes `encoding:null` handling
 - if not specified, request content-type is auto-detected as `text/plain`, `application/octet-stream` or `application/json`
 - callback is optional, like request
 - body and options are optional

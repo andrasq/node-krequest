@@ -190,7 +190,7 @@ describe ('krequest', function() {
 
         it ('basicAuth should set auth', function(done) {
             client.basicAuth('test', unique);
-            client.post("/", {}, function(err, res, body) {
+            client.post("/", {}, function(err, req, res, body) {
                 var auth = new Buffer('test:' + unique).toString('base64');
                 assert.ok(serverChunk.toString().indexOf('authorization: Basic ' + auth + '\r\n') > 0);
                 done();

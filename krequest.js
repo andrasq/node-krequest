@@ -63,11 +63,17 @@ function fixupApi( client ) {
                 var uri = buildUri(client, url, body, options, typeMap);
                 // return untranslated responses by default
                 if (uri.encoding === undefined) uri.encoding = null;
-                return _requestMethods[name].call(client, uri, function(err, res, body) {
-                    if (err) callback(err);
-                    res.body = body;
-                    if (callback) callback(err, res, body);
-                });
+                var ret = _requestMethods[name].call(client, uri);
+
+                // fix encoding:null, which many versions of request dont honor
+                if (callback) {
+                    gatherChunks(ret, function(err, buffer) {
+                        var res = ret.response;
+                        res.body = buffer;
+                        callback(err, res, uri.encoding === null ? buffer : buffer.toString(uri.encoding));
+                    })
+                }
+                return ret;
             }
             catch (err) {
                 return callback(err)
@@ -115,9 +121,14 @@ function createJsonClient( userOpts ) {
             try {
                 var typeMap = { text: 'application/json', binary: 'application/bson', empty: 'application/json', other: 'application/json' };
                 var uri = buildUri(client, url, body, null, typeMap);
-                return _requestMethods[name].call(client, uri, function(err, res, body) {
-                    returnJsonClientResponse(err, res.req, res, body, callback);
-                });
+                var ret = _requestMethods[name].call(client, uri);
+                gatherChunks(ret, function(err, buffer) {
+                    var req = ret.req;
+                    var res = ret.response;
+                    res.body = buffer;
+                    return returnJsonClientResponse(err, req, res, buffer, callback);
+                })
+                return ret;
             }
             catch (err) {
                 return callback(err)
@@ -204,4 +215,21 @@ function buildUri( req, url, body, options, typeMap ) {
     }
 
     return uri;
+}
+
+var emptyBuffer = new Buffer("");
+function gatherChunks( ret, callback ) {
+    var chunks = [];
+    var done = 0;
+
+    ret.on('data', function(chunk) {
+        chunks.push(chunk);
+    })
+    ret.on('error', function(err) {
+        if (!done++) callback(err, err);
+    })
+    ret.on('end', function() {
+        var data = chunks.length > 1 ? Buffer.concat(chunks) : chunks.length > 0 ? chunks[0] : emptyBuffer;
+        if (!done++) callback(null, data);
+    })
 }
