@@ -20,6 +20,7 @@ of each; specifically
 - callback is optional, like request
 - body and options are optional
 - only the `post`, `get`, `put` etc convenience methods are wrappered; `request()` is unchanged
+- sending an empty "" request body with jsonClient calls with an empty request body
 
 The jsonClient support is in the form of a `createJsonClient` method that returns
 a request object with jsonClient-like call and response semantics, namely
