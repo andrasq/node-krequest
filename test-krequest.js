@@ -254,6 +254,13 @@ describe ('krequest', function() {
             })
         })
 
+        it ('null body is sent as the empty object {}', function(done) {
+            client.post("/path", null, function(err, req, res, obj) {
+                assert.equal(serverChunk.slice(-6).toString(), "\r\n\r\n{}");
+                done();
+            })
+        })
+
         it ('unparseable json response returns emtpy object', function(done) {
             responseType = "text/plain";
             responseMessage = "not,Json";

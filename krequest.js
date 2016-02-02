@@ -153,6 +153,7 @@ function createJsonClient( userOpts ) {
         if (err || !res) return cb(err, req, res, null);
 
         var obj;
+        // restify jsonClient json-decodes all responses regardless of content-type
         try { obj = JSON.parse(body) } catch (e) { obj = {} }
 
         // restify jsonClient returns its own custom http errors, these are vanilla Errors
@@ -211,7 +212,8 @@ function buildUri( req, url, body, options, typeMap ) {
         var type;
         if (typeof body === 'string')   { type = typeMap.text; }
         else if (Buffer.isBuffer(body)) { type = typeMap.binary; }
-        else if (body == null)          { type = typeMap.empty; body = ""; }
+        // restify jsonClient converts null body into "{}", errors out on "" and undefined
+        else if (body == null)          { type = typeMap.empty; body = "{}"; }
         else                            { type = typeMap.other; body = JSON.stringify(body); }
         if (!headers['Content-Type'] && !headers['content-type']) headers['Content-Type'] = type;
         return body;
