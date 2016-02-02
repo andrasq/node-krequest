@@ -3,6 +3,7 @@
   "version": "0.1.2",
   "description": "wrappered request with improved api",
   "main": "krequest.js",
+  "readmeFilename": "Readme.md",
   "engines": {
     "node": ">=0.8"
   },
