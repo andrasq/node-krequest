@@ -123,10 +123,8 @@ function createJsonClient( userOpts ) {
                 var uri = buildUri(client, url, body, null, typeMap);
                 var ret = _requestMethods[name].call(client, uri);
                 gatherChunks(ret, function(err, buffer) {
-                    var req = ret.req;
-                    var res = ret.response;
-                    res.body = buffer;
-                    return returnJsonClientResponse(err, req, res, buffer, callback);
+                    // `request` attaches the http req and res to its return object ret
+                    return returnJsonClientResponse(err, ret.req, ret.response, buffer, callback);
                 })
                 return ret;
             }
@@ -139,29 +137,19 @@ function createJsonClient( userOpts ) {
     function returnJsonClientResponse( err, req, res, body, cb ) {
         if (err || !res) return cb(err, req, res, null);
 
-        // decode the response body into an object
         var obj;
-        switch (res.headers['content-type']) {
-        case 'application/bson':
-        case 'application/octet-stream':
-            try { obj = BSON.deserialize(body) } catch (err) { obj = {} }
-            break;
-        case 'application/json':
-        case undefined:
-            try { obj = JSON.parse(body.toString()) } catch (err) { obj = {} }
-            break;
-        case 'text/plain':
-        default:
-            obj = {};
-            break;
-        }
-        if (!err && res.statusCode >= 400) {
+        try { obj = JSON.parse(body) } catch (e) { obj = {} }
+
+        // restify jsonClient returns its own custom http errors, these are vanilla Errors
+        if (!err && res && res.statusCode >= 400) {
             err = new Error(http.STATUS_CODES[res.statusCode] || "http error");
+            err.message = body.toString();
             err.statusCode = res.statusCode;
             err.body = obj;
         }
 
-        res.body = body;
+        // restify jsonClient returned body is always a string
+        res.body = body.toString();
         return cb(err, req, res, obj);
     }
 

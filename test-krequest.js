@@ -13,6 +13,8 @@ describe ('krequest', function() {
     var baseUrl = "http://localhost:1337";
     var serverChunk;
     var responseMessage;
+    var responseCode;
+    var responseType;
 
     before ('setUp', function(done) {
         server = net.createServer().listen(1337);
@@ -20,25 +22,14 @@ describe ('krequest', function() {
             socket.setNoDelay();
             socket.on('data', function(chunk) {
                 serverChunk = chunk;
-                if (chunk.toString().indexOf(' /jsonError HTTP') > 0) {
-                    socket.write(
-                        "HTTP/1.1 404 NOT FOUND\r\n" +
-                        "Content-Length: " + responseMessage.length + "\r\n" +
-                        "\r\n" +
-                        responseMessage
-                    );
-                    socket.end();
-                }
-                else {
-                    socket.write(
-                        "HTTP/1.1 200 OK\r\n" +
-                        "Content-Type: " + "text/plain" + "\r\n" +
-                        "Content-Length: " + responseMessage.length + "\r\n" +
-                        "\r\n" +
-                        responseMessage
-                    );
-                    socket.end();
-                }
+                socket.write(
+                    "HTTP/1.1 " + responseCode + " " + http.STATUS_CODES[responseCode] + "\r\n" +
+                    "Content-Length: " + responseMessage.length + "\r\n" +
+                    "Content-Type: " + responseType + "\r\n" +
+                    "\r\n"
+                );
+                socket.write(responseMessage);
+                socket.end();
             })
         })
         done();
@@ -52,6 +43,8 @@ describe ('krequest', function() {
     beforeEach (function(done) {
         unique = Math.floor(Math.random() * 0x100000000).toString(16);
         responseMessage = unique;
+        responseCode = 200;
+        responseType = "application/json";
         serverChunk = null;
         done();
     })
@@ -198,6 +191,7 @@ describe ('krequest', function() {
         })
 
         it ('post returns err/req/res/obj params', function(done) {
+            responseCode = 404;
             client.post("/jsonError", {body: unique}, function(err, req, res, obj) {
                 assert.ok(serverChunk.toString().indexOf(unique) > 0);
                 assert.ok(err instanceof Error);
@@ -206,15 +200,75 @@ describe ('krequest', function() {
                 assert.ok(res instanceof http.IncomingMessage);
                 assert.ok(res.body.toString().indexOf(unique) >= 0);
                 assert.ok(obj);
+                assert.equal(err.body, obj);
+                assert.equal(err.message, res.body);
                 done();
             })
         })
 
+        it ('returns unparsed body in res.body as string', function(done) {
+            responseMessage = '{"a":1}';
+            client.post("/path", {}, function(err, req, res, obj) {
+                assert.deepEqual(obj, {a: 1});
+                assert.equal(res.body, responseMessage);
+
+                responseMessage = new Buffer([0x0c, 0x00, 0x00, 0x00, 0x10, 0x61, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]);     // {a:1}
+                client.post("/path", {}, function(err, req, res, obj) {
+                    assert.equal(res.body, responseMessage);
+                    assert.ok(typeof res.body === 'string');
+                    done();
+                })
+            })
+        })
+
         it ('hoists http errors into the err object', function(done) {
+            responseCode = 404;
             client.post("/jsonError", {}, function(err, req, res, obj) {
                 assert.ok(err);
                 assert.equal(err.statusCode, 404);
                 done();
+            })
+        })
+
+        it ('empty response returns emtpy object', function(done) {
+            responseMessage = "";
+            client.post("/path", {}, function(err, req, res, obj) {
+                assert.equal(typeof obj, 'object');
+                assert.equal(Object.keys(obj).length, 0);
+                done();
+            })
+        })
+
+        it ('unparseable json response returns emtpy object', function(done) {
+            responseType = "text/plain";
+            responseMessage = "not,Json";
+            client.post("/path", {}, function(err, req, res, obj) {
+                assert.equal(typeof obj, 'object');
+                assert.equal(Object.keys(obj).length, 0);
+
+                responseType = "application/bson";
+                responseMessage = new Buffer([0x0c, 0x00, 0x00, 0x00, 0x10, 0x61, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]);     // {a:1}
+                client.post("/path", {}, function(err, req, res, obj) {
+                    assert.deepEqual(obj, {});
+
+                    done();
+                })
+            })
+        })
+
+        it ('decodes all parseable json responses into objects', function(done) {
+            responseType = "text/plain";
+            responseMessage = '{"yes":"json"}';
+            client.post("/path", {}, function(err, req, res, obj) {
+                assert.deepEqual(obj, {yes: "json"});
+
+                responseType = "application/bson";
+                responseMessage = "123";
+                client.post("/path", {}, function(err, req, res, obj) {
+                    assert.deepEqual(obj, 123);
+
+                    done();
+                })
             })
         })
     })
