@@ -5,18 +5,40 @@ This is a wrapper around [`request`](https://npmjs.org/package/request) to make 
 api more convenient to use (give it a nicer "hand-feel") and to ease transition away
 from `restify.createJsonClient`.
 
-The modified api is a blend of request and jsonClient, combining the good features
-of each; specifically
+With some minor differences (described below), it behaves just like `request`.
 
-- web requests can specify the body directly as a call parameter like jsonClient
+Summary
+
+        // POST request, gather and return response to callback
+        var krequest = require('krequest');
+        krequest.post(uri, body, function callback(err, res, body) {
+            // ...
+        });
+
+        // POST request, return response as it arrives via events
+        var reply = krequest.post(uri, body);
+        reply.on('data', function(chunk) { ... });
+        reply.on('end', function() { ... });
+
+Differences from `request`:
+
+- web requests can specify the body directly as a call parameter eg
+  `post( uri, body, callback )`, like jsonClient
 - calls return the un-decoded binary response by default (`encoding:null`), like qhttp
-- both absolute and relative urls work without surprises, like jsonClient
+  Specify a different encoding or call `body.toString()` to convert.
 - a `url` specified as a `defaults()` option is a baseUrl, like jsonClient.  Note that request
   prevents a baseUrl from being overridden by another fully qualified url; use the `url`
   jsonClient syntax for that.
 - request bodies are json-encoded if not already a string or Buffer, like jsonClient
-- fixes `encoding:null` handling
-- if not specified, request content-type is auto-detected as `text/plain`, `application/octet-stream` or `application/json`
+- if the request Content-Type is not specified, it is auto-detected as one of
+  `text/plain` (strings), `application/octet-stream` (Buffers) else `application/json`.
+
+Fixes and other changes:
+
+- both absolute and relative urls work without surprises, like jsonClient
+- an fully qualified url in a call overrides a baseUrl specified in `defaults`
+  instead of erroring out
+- `encoding:null` works, binary response handling is fixed
 - callback is optional, like request
 - body and options are optional
 - only the `post`, `get`, `put` etc convenience methods are wrappered; `request()` is unchanged
@@ -28,7 +50,7 @@ a request object with jsonClient-like call and response semantics, namely
 - web request bodies are auto-encoded before being sent
 - if not specified, request content-type is auto-detected as `application/json` (strings or objects) or `application/bson` (Buffers)
 - response bodies are audo-decoded into objects
-- the callback gets `(err, req, res, obj)` with req.headers populated
+- the callback gets `(err, req, res, obj)`
 
 Some of the drawbacks of `request` are harder be work around; among these are that
 it doesn't follow the "do one thing and do it well" principle, and even simple
