@@ -92,22 +92,6 @@ describe ('krequest', function() {
         done();
     })
 
-    it ('makes call to baseUrl', function(done) {
-        var client = krequest.defaults({ baseUrl: baseUrl, encoding: 'utf8' });
-        client.post("/path", function(err, res, body) {
-            assert.equal(body, unique)
-            done();
-        })
-    })
-
-    it ('fully qualified url overrides baseUrl', function(done) {
-        var client = krequest.defaults({ baseUrl: "http://google.com", encoding: 'utf8' });
-        client.post(baseUrl, function(err, res, body) {
-            assert.equal(body, unique)
-            done();
-        })
-    })
-
     it ('makes post request and returns body', function(done) {
         krequest.post(baseUrl, function(err, res, body) {
             if (err) return done(err);
@@ -131,6 +115,22 @@ describe ('krequest', function() {
             if (err) return done(err);
             assert.ok(serverChunk.toString().indexOf('PUT / HTTP') == 0);
             assert.equal(body.toString(), unique);
+            done();
+        })
+    })
+
+    it ('makes call to baseUrl', function(done) {
+        var client = krequest.defaults({ baseUrl: baseUrl, encoding: 'utf8' });
+        client.post("/path", function(err, res, body) {
+            assert.equal(body, unique)
+            done();
+        })
+    })
+
+    it ('fully qualified url overrides baseUrl', function(done) {
+        var client = krequest.defaults({ baseUrl: "http://google.com", encoding: 'utf8' });
+        client.post(baseUrl, function(err, res, body) {
+            assert.equal(body, unique)
             done();
         })
     })
