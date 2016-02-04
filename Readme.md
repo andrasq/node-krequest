@@ -24,8 +24,8 @@ Differences from `request`:
 
 - web requests can specify the body directly as a call parameter eg
   `post( uri, body, callback )`, like jsonClient
-- calls return the un-decoded binary response by default (`encoding:null`), like qhttp
-  Specify a different encoding or call `body.toString()` to convert.
+- calls return the un-decoded binary response by default (`encoding:null`), like qhttp.
+  Specify an encoding explicitly or call `body.toString()` to convert.
 - a `url` specified as a `defaults()` option is a baseUrl, like jsonClient.  Note that request
   prevents a baseUrl from being overridden by another fully qualified url; use the `url`
   jsonClient syntax for that.

@@ -33,13 +33,14 @@ function fixupApi( client ) {
 
     var _defaults = client.defaults;
     client.defaults = function( options ) {
-        options = options || {};
-        var req = request.defaults(options);
-        req = fixupApi(req);
+        options = copyFields({}, options);
         var _kreq = { baseUrl: '', options: { headers: {} } };
         _kreq.baseUrl = options.baseUrl || options.url || '';
-        _kreq.options = copyFields({}, options);
+        _kreq.options = options;
         _kreq.options.headers = copyFields({}, options.headers);
+        delete options.baseUrl;
+        var req = request.defaults(options);
+        req = fixupApi(req);
         req._kreq = _kreq;
         return req;
     };
